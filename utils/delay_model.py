@@ -1,13 +1,18 @@
-
+import os
 import pandas as pd
 import joblib
 
 from utils.timetable import merged
+from train_model import train_model
+
+MODEL_PATH = "models/delay_predictor.pkl"
+
+# TRAIN MODEL IF IT DOESN'T EXIST
+if not os.path.exists(MODEL_PATH):
+    train_model()
 
 # LOAD SAVED MODEL
-delay_model = joblib.load(
-    "models/delay_predictor.pkl"
-)
+delay_model = joblib.load(MODEL_PATH)
 
 # STATION TRAFFIC STATISTICS
 station_frequency = (
