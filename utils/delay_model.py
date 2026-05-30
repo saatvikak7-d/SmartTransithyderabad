@@ -7,7 +7,7 @@ import joblib
 sys.path.append(os.path.abspath("."))
 
 from utils.timetable import merged
-from train_model import train_model
+from trainmodel import train_model
 
 MODEL_PATH = "models/delay_predictor.pkl"
 
