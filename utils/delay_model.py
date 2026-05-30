@@ -1,9 +1,13 @@
 import os
+import sys
 import pandas as pd
 import joblib
 
+# allow importing from project root
+sys.path.append(os.path.abspath("."))
+
 from utils.timetable import merged
-from trainmodel import train_model
+from train_model import train_model
 
 MODEL_PATH = "models/delay_predictor.pkl"
 
@@ -20,10 +24,11 @@ station_frequency = (
     .value_counts()
 )
 
+# =========================================================
 # GENERATE DELAY FEATURES
-def generate_delay_features(
-    row
-):
+# =========================================================
+
+def generate_delay_features(row):
 
     hour = row["hour"]
 
@@ -36,6 +41,7 @@ def generate_delay_features(
 
     num_stops = row["IN_numstops"]
 
+    # PEAK HOURS
     if hour in [7, 8, 9, 17, 18, 19]:
 
         pct_right_time = 60
@@ -49,21 +55,24 @@ def generate_delay_features(
         pct_slight_delay = 10
         pct_significant_delay = 3
         pct_cancelled_unknown = 2
-    # BUSY STATION
+
+    # BUSY STATION EFFECT
     if station_load > 50:
 
         pct_right_time -= 10
         pct_slight_delay += 5
+
     # SLOW ROUTE EFFECT
     if route_speed < 30:
 
         pct_significant_delay += 3
+
     # LONG ROUTE EFFECT
     if num_stops > 15:
 
         pct_slight_delay += 3
 
-    # PREVENT INVALID PERCENTAGES
+    # PREVENT INVALID VALUES
     pct_right_time = max(
         pct_right_time,
         5
@@ -74,9 +83,7 @@ def generate_delay_features(
         90
     )
 
-
     # RETURN MODEL FEATURES
-
     return pd.DataFrame({
 
         "pct_right_time": [
@@ -101,10 +108,7 @@ def generate_delay_features(
 # PREDICT DELAY
 # =========================================================
 
-def predict_delay(
-    row
-):
-
+def predict_delay(row):
 
     features = generate_delay_features(
         row
@@ -114,7 +118,7 @@ def predict_delay(
         features
     )[0]
 
-    # prevent negative delay
+    # prevent negative delays
     predicted_delay = max(
         predicted_delay,
         0
