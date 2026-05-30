@@ -4,12 +4,17 @@ from statsmodels import imputation as imp
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
-#%%
 
+import os
+import joblib
+
+def train_model():
+
+    os.makedirs("models", exist_ok=True)
 data = pd.read_csv('data/stop_times.txt')
 
 print(data.columns)
-#%%
+
 def fix_time(t):
     if pd.isna(t):
         return t
@@ -34,13 +39,13 @@ data["departure_time"] = pd.to_datetime(
     data["departure_time"],
     format="%H:%M:%S"
 )
-#%%
+
 data.describe()
 data.apply(np.max)
 data["hour"] = data["departure_time"].dt.hour
 
 data["hour"].value_counts().sort_index().plot(kind="bar")
-#%%
+
 counts = data["stop_id"].head(20).value_counts()
 
 plt.figure(figsize=(12, 6))
@@ -53,7 +58,7 @@ plt.title("Frequency of Stops by Station")
 plt.xticks(rotation=90)
 
 plt.show()
-#%%
+
 data["travel_segment"] = (
         data.groupby("trip_id")["arrival_time"]
         .diff()
@@ -71,7 +76,7 @@ plt.title("MMTS Activity Throughout the Day")
 plt.grid(True)
 
 plt.show()
-#%%
+
 top_stations = data["stop_id"].value_counts().head(15)
 
 plt.figure(figsize=(12, 6))
@@ -123,7 +128,7 @@ plt.title("MMTS Station Activity Heatmap")
 
 plt.show()
 
-#%%
+
 
 delay_data = pd.read_csv(
     "data/etrain_delays.csv"
@@ -134,25 +139,25 @@ print(delay_data.head())
 print(delay_data.info())
 
 
-#%%
+
 
 print(
     delay_data.isnull().sum()
 )
 
 
-#%%
+
 delay_data["average_delay_minutes"] = ( delay_data["average_delay_minutes"] .fillna( delay_data["average_delay_minutes"].median() ) )
-#%%
+
 numeric_cols = [ "average_delay_minutes",
                  "pct_right_time",
                  "pct_slight_delay",
                  "pct_significant_delay",
                  "pct_cancelled_unknown" ]
 delay_data[numeric_cols] = ( delay_data[numeric_cols] .apply(pd.to_numeric, errors="coerce") )
-#%%
+
 delay_data = delay_data.dropna()
-#%%
+
 
 plt.figure(figsize=(10,6))
 
@@ -169,7 +174,7 @@ plt.title("Distribution of Railway Delays")
 plt.show()
 
 
-#%%
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
@@ -237,7 +242,7 @@ print("\nModel Performance:\n")
 print(f"MAE  : {mae:.2f} minutes")
 print(f"RMSE : {rmse:.2f} minutes")
 print(f"R²   : {r2:.4f}")
-#%%
+
 #Feature importance
 
 importance_df = pd.DataFrame({
@@ -253,7 +258,6 @@ importance_df = importance_df.sort_values(
 print("\nFeature Importance:\n")
 print(importance_df)
 
-#%%
 #plotting of the features
 plt.figure(figsize=(10, 6))
 
@@ -270,7 +274,7 @@ plt.title("Feature Importance for Delay Prediction")
 plt.xticks(rotation=20)
 
 plt.show()
-#%%
+
 #plotting the predictions
 plt.figure(figsize=(8, 8))
 
@@ -293,13 +297,10 @@ plt.plot(
 
 plt.show()
 
-#%%
+
+    # after training:
+    joblib.dump(model, "models/delay_predictor.pkl")
+
+    return model
+
 #saving the model
-import joblib
-
-joblib.dump(
-    rf_regressor,
-    "models/delay_predictor.pkl"
-)
-
-print("\nModel saved successfully.")
