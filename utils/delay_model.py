@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 from utils.timetable import merged
-from train_model import train_model
+from trainmodel import train_model
 
 MODEL_PATH = "models/delay_predictor.pkl"
 
